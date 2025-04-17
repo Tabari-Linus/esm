@@ -64,6 +64,9 @@ public class EmployeeManagementController {
     private TextField departmentField;
     @FXML
     private TextField minRatingField;
+    @FXML
+    private ComboBox<String> filterActiveComboBox;
+
 
 
 
@@ -95,16 +98,16 @@ public class EmployeeManagementController {
                 });
             }
 
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    HBox buttons = new HBox(10, viewButton, deleteButton);
-                    setGraphic(buttons);
-                }
-            }
+//            @Override
+//            protected void updateItem(Void item, boolean empty) {
+//                super.updateItem(item, empty);
+//                if (empty) {
+//                    setGraphic(null);
+//                } else {
+//                    HBox buttons = new HBox(10, viewButton, deleteButton);
+//                    setGraphic(buttons);
+//                }
+//            }
         });
 
         sortOptions.setItems(FXCollections.observableArrayList(
@@ -187,86 +190,93 @@ public class EmployeeManagementController {
 
     @FXML
     private void onAddEmployee() {
-        Stage dialog = new Stage();
-        dialog.setTitle("Add New Employee");
+        try {
+            Stage dialog = new Stage();
+            dialog.setTitle("Add New Employee");
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
 
-        TextField nameField = new TextField();
-        TextField deptField = new TextField();
-        TextField salaryField = new TextField();
-        TextField experienceField = new TextField();
-        CheckBox activeBox = new CheckBox("Active");
+            TextField nameField = new TextField();
+            TextField deptField = new TextField();
+            TextField salaryField = new TextField();
+            TextField experienceField = new TextField();
+            CheckBox activeBox = new CheckBox("Active");
 
-        Slider ratingSlider = new Slider(0, 5, 0);
-        ratingSlider.setShowTickLabels(true);
-        ratingSlider.setShowTickMarks(true);
-        ratingSlider.setMajorTickUnit(1);
-        ratingSlider.setBlockIncrement(0.1);
+            Slider ratingSlider = new Slider(0, 5, 0);
+            ratingSlider.setShowTickLabels(true);
+            ratingSlider.setShowTickMarks(true);
+            ratingSlider.setMajorTickUnit(1);
+            ratingSlider.setBlockIncrement(0.1);
 
-        Button uploadBtn = new Button("Upload Image");
-        final String[] imagePath = {"file:images/placeholder.jpg"};
-        uploadBtn.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            File selectedFile = fileChooser.showOpenDialog(dialog);
-            if (selectedFile != null) {
-                imagePath[0] = selectedFile.toURI().toString();
-            }
-        });
+            Button uploadBtn = new Button("Upload Image");
+            final String[] imagePath = {"file:images/placeholder.jpg"};
+            uploadBtn.setOnAction(e -> {
+                try {
+                    FileChooser fileChooser = new FileChooser();
+                    File selectedFile = fileChooser.showOpenDialog(dialog);
+                    if (selectedFile != null) {
+                        imagePath[0] = selectedFile.toURI().toString();
+                    }
+                } catch (Exception ex) {
+                    showAlert("Error", "Failed to upload image: " + ex.getMessage());
+                }
+            });
 
-        Button saveBtn = new Button("Save");
-        saveBtn.setOnAction(e -> {
-            try {
-                Employee<UUID> newEmployee = new Employee<>(
-                        UniqueIdGenerator.generateUniqueId(),
-                        nameField.getText(),
-                        deptField.getText(),
-                        Double.parseDouble(salaryField.getText()),
-                        ratingSlider.getValue(),
-                        Integer.parseInt(experienceField.getText()),
-                        activeBox.isSelected(),
-                        imagePath[0]
-                );
-                employeeDatabase.addEmployee(newEmployee);
-                employees.setAll(employeeDatabase.getAllEmployees());
-                statusLabel.setText("Employee added successfully.");
-                dialog.close();
-            } catch (NumberFormatException ex) {
-                statusLabel.setText("Invalid input. Please check the fields.");
-            }
-        });
+            Button saveBtn = new Button("Save");
+            saveBtn.setOnAction(e -> {
+                try {
+                    Employee<UUID> newEmployee = new Employee<>(
+                            UniqueIdGenerator.generateUniqueId(),
+                            nameField.getText(),
+                            deptField.getText(),
+                            Double.parseDouble(salaryField.getText()),
+                            ratingSlider.getValue(),
+                            Integer.parseInt(experienceField.getText()),
+                            activeBox.isSelected(),
+                            imagePath[0]
+                    );
+                    employeeDatabase.addEmployee(newEmployee);
+                    employees.setAll(employeeDatabase.getAllEmployees());
+                    statusLabel.setText("Employee added successfully.");
+                    dialog.close();
+                } catch (NumberFormatException ex) {
+                    showAlert("Error", "Invalid input. Please check the fields.");
+                } catch (Exception ex) {
+                    showAlert("Error", "Failed to add employee: " + ex.getMessage());
+                }
+            });
 
-        grid.addRow(0, new Label("Name:"), nameField);
-        grid.addRow(1, new Label("Department:"), deptField);
-        grid.addRow(2, new Label("Salary:"), salaryField);
-        grid.addRow(3, new Label("Experience (yrs):"), experienceField);
-        grid.addRow(4, new Label("Performance Rating:"), ratingSlider);
-        grid.addRow(5, activeBox, uploadBtn);
-        grid.add(saveBtn, 1, 6);
+            grid.addRow(0, new Label("Name:"), nameField);
+            grid.addRow(1, new Label("Department:"), deptField);
+            grid.addRow(2, new Label("Salary:"), salaryField);
+            grid.addRow(3, new Label("Experience (yrs):"), experienceField);
+            grid.addRow(4, new Label("Performance Rating:"), ratingSlider);
+            grid.addRow(5, activeBox, uploadBtn);
+            grid.add(saveBtn, 1, 6);
 
-        VBox container = new VBox(grid);
-        container.setPadding(new Insets(20)); // Add padding around the content
+            VBox container = new VBox(grid);
+            container.setPadding(new Insets(20));
 
-        Scene scene = new Scene(container, 400, 300);
-        dialog.setScene(scene);
-        dialog.show();
+            Scene scene = new Scene(container, 400, 300);
+            dialog.setScene(scene);
+            dialog.show();
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to open Add Employee dialog: " + ex.getMessage());
+        }
     }
 
     @FXML
     private void onApplyFilter() {
         try {
-            // Initialize filtered list with all employees
             List<Employee<UUID>> filteredList = new ArrayList<>(employeeDatabase.getAllEmployees());
 
-            // Apply rating filter if slider value is greater than 0
             double minRating = ratingFilterSlider.getValue();
             if (minRating > 0) {
                 filteredList = employeeDatabase.searchByMinimumPerformanceRating(minRating);
             }
 
-            // Apply salary filter if both fields are filled
             String minSalaryText = minSalaryField.getText();
             String maxSalaryText = maxSalaryField.getText();
             if (!minSalaryText.isEmpty() && !maxSalaryText.isEmpty()) {
@@ -277,11 +287,12 @@ public class EmployeeManagementController {
                         .collect(Collectors.toList());
             }
 
-            // Update the table with the filtered list
             employees.setAll(filteredList);
             statusLabel.setText("Filters applied successfully.");
         } catch (NumberFormatException ex) {
-            statusLabel.setText("Invalid input. Please check the salary fields.");
+            showAlert("Error", "Invalid input. Please check the salary fields.");
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to apply filters: " + ex.getMessage());
         }
     }
 
@@ -427,36 +438,86 @@ public class EmployeeManagementController {
             double percentage = Double.parseDouble(raisePercentageField.getText());
             double minRating = Double.parseDouble(minRatingField.getText());
 
-            employeeDatabase.giveSalaryRaise(percentage, minRating); // Apply raise for employees with rating ≥ minRating
-            employees.setAll(employeeDatabase.getAllEmployees()); // Refresh the table
+            employeeDatabase.giveSalaryRaise(percentage, minRating);
+            employees.setAll(employeeDatabase.getAllEmployees());
+
+
             showAlert("Success", "Salary raise applied successfully.");
-        } catch (NumberFormatException e) {
+            raisePercentageField.setText("");
+            minRatingField.setText("");
+        } catch (NumberFormatException ex) {
             showAlert("Error", "Invalid input. Please enter valid numbers.");
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to apply salary raise: " + ex.getMessage());
         }
     }
 
     @FXML
     private void onViewTop5HighestPaid() {
-        List<Employee<UUID>> top5Employees = employeeDatabase.getTop5HighestPaidEmployees();
-        StringBuilder message = new StringBuilder("Top 5 Highest Paid Employees:\n");
-        for (Employee<UUID> employee : top5Employees) {
-            message.append(String.format("- %s: $%.2f\n", employee.getName(), employee.getSalary()));
+        try {
+            List<Employee<UUID>> top5Employees = employeeDatabase.getTop5HighestPaidEmployees();
+            StringBuilder message = new StringBuilder("Top 5 Highest Paid Employees:\n");
+            for (Employee<UUID> employee : top5Employees) {
+                message.append(String.format("- %s: $%.2f\n", employee.getName(), employee.getSalary()));
+            }
+            showAlert("Top 5 Highest Paid Employees", message.toString());
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to retrieve top 5 highest-paid employees: " + ex.getMessage());
         }
-        showAlert("Top 5 Highest Paid Employees", message.toString());
     }
 
     @FXML
     private void onCalculateAverageSalary() {
-        String department = departmentField.getText();
-        if (department.isEmpty()) {
-            showAlert("Error", "Please enter a department.");
-            return;
+        try {
+            String department = departmentField.getText();
+            if (department.isEmpty()) {
+                showAlert("Error", "Please enter a department.");
+                return;
+            }
+            double averageSalary = employeeDatabase.calculateAverageSalaryByDepartment(department);
+            if (averageSalary > 0) {
+                showAlert("Average Salary", String.format("Average salary in %s: $%.2f", department, averageSalary));
+            } else {
+                showAlert("Average Salary", "No employees found in the specified department.");
+            }
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to calculate average salary: " + ex.getMessage());
         }
-        double averageSalary = employeeDatabase.calculateAverageSalaryByDepartment(department);
-        if (averageSalary > 0) {
-            showAlert("Average Salary", String.format("Average salary in %s: $%.2f", department, averageSalary));
-        } else {
-            showAlert("Average Salary", "No employees found in the specified department.");
+    }
+
+
+    @FXML
+    private void onFilterActiveComboBox() {
+        try {
+            String selectedFilter = filterActiveComboBox.getValue();
+            List<Employee<UUID>> filteredEmployees;
+
+            if ("Active Employees".equals(selectedFilter)) {
+                filteredEmployees = new ArrayList<>();
+                Iterator<Employee<UUID>> iterator = employeeDatabase.getEmployeeIterator();
+                while (iterator.hasNext()) {
+                    Employee<UUID> employee = iterator.next();
+                    if (employee.isActive()) {
+                        filteredEmployees.add(employee);
+                    }
+                }
+            } else if ("Inactive Employees".equals(selectedFilter)) {
+                filteredEmployees = new ArrayList<>();
+                Iterator<Employee<UUID>> iterator = employeeDatabase.getEmployeeIterator();
+                while (iterator.hasNext()) {
+                    Employee<UUID> employee = iterator.next();
+                    if (!employee.isActive()) {
+                        filteredEmployees.add(employee);
+                    }
+                }
+            } else {
+                // Default to showing all employees
+                filteredEmployees = new ArrayList<>(employeeDatabase.getAllEmployees());
+            }
+
+            employees.setAll(filteredEmployees);
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to apply filter: " + ex.getMessage());
         }
     }
 

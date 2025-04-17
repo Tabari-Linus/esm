@@ -2,6 +2,8 @@ package lii.employeemanagementsystem.model;
 
 import javafx.beans.property.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 public class Employee<T> implements Comparable<Employee<T>> {
@@ -21,12 +23,17 @@ public class Employee<T> implements Comparable<Employee<T>> {
         this.name.set(name);
         this.department.set(department);
         this.salary.set(salary);
-        this.performanceRating.set(performanceRating);
+        this.performanceRating.set(roundToOneDecimalPlace(performanceRating));
         this.yearsOfExperience.set(yearsOfExperience);
         this.active.set(active);
         this.profilePicture.set(profilePicture);
     }
 
+    private double roundToOneDecimalPlace(double value) {
+        return BigDecimal.valueOf(value)
+                .setScale(1, RoundingMode.HALF_UP)
+                .doubleValue();
+    }
     // Getters and Setters
     public ObjectProperty<T> employeeIdProperty() {
         return employeeId;
@@ -97,7 +104,7 @@ public class Employee<T> implements Comparable<Employee<T>> {
     }
 
     public void setPerformanceRating(double performanceRating) {
-        this.performanceRating.set(performanceRating);
+        this.performanceRating.set(roundToOneDecimalPlace(performanceRating));
     }
 
     public int getYearsOfExperience() {
