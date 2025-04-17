@@ -90,19 +90,7 @@ public class EmployeeDatabase<T> {
         return employeeMap.values();
     }
 
-    // Search employees by department
-    public List<Employee<T>> searchByDepartment(String department) {
-        return employeeMap.values().stream()
-                .filter(employee -> employee.getDepartment().equalsIgnoreCase(department))
-                .collect(Collectors.toList());
-    }
 
-    // Search employees by name (contains search term, case-insensitive)
-    public List<Employee<T>> searchByName(String searchTerm) {
-        return employeeMap.values().stream()
-                .filter(employee -> employee.getName().toLowerCase().contains(searchTerm.toLowerCase()))
-                .collect(Collectors.toList());
-    }
 
     // Search employees by minimum performance rating
     public List<Employee<T>> searchByMinimumPerformanceRating(double minRating) {
@@ -111,6 +99,15 @@ public class EmployeeDatabase<T> {
                 .collect(Collectors.toList());
     }
 
+    public List<Employee<T>> searchByTerm(String searchTerm) {
+        List<Employee<T>> filtered = new ArrayList<>();
+        for (Employee<T> emp : employeeMap.values()) {
+            if (emp.getName().toLowerCase().contains(searchTerm.toLowerCase()) || emp.getDepartment().toLowerCase().contains(searchTerm.toLowerCase())) {
+                filtered.add(emp);
+            }
+        }
+        return filtered;
+    }
     // Search employees by salary range
     public List<Employee<T>> searchBySalaryRange(double minSalary, double maxSalary) {
         return employeeMap.values().stream()
