@@ -3,12 +3,16 @@ package lii.employeemanagementsystem.ui;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import lii.employeemanagementsystem.database.EmployeeDatabase;
 import lii.employeemanagementsystem.model.Employee;
 import lii.employeemanagementsystem.service.UniqueIdGenerator;
 
+import java.io.File;
 import java.util.*;
 
 public class EmployeeManagementController {
@@ -80,8 +84,64 @@ public class EmployeeManagementController {
 
     @FXML
     private void onAddEmployee() {
-        // Logic to add a new employee (e.g., show a dialog to input details)
-        statusLabel.setText("Add Employee clicked.");
+        Stage dialog = new Stage();
+        dialog.setTitle("Add New Employee");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        TextField nameField = new TextField();
+        TextField deptField = new TextField();
+        TextField salaryField = new TextField();
+        TextField experienceField = new TextField();
+        CheckBox activeBox = new CheckBox("Active");
+        ChoiceBox<Double> ratingChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(0.0, 1.0, 2.0, 3.0, 4.0, 5.0));
+        ratingChoiceBox.setValue(0.0);
+
+        Button uploadBtn = new Button("Upload Image");
+        final String[] imagePath = {"file:images/placeholder.jpg"};
+        uploadBtn.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            File selectedFile = fileChooser.showOpenDialog(dialog);
+            if (selectedFile != null) {
+                imagePath[0] = selectedFile.toURI().toString();
+            }
+        });
+
+        Button saveBtn = new Button("Save");
+        saveBtn.setOnAction(e -> {
+            try {
+                Employee<UUID> newEmployee = new Employee<>(
+                        UniqueIdGenerator.generateUniqueId(),
+                        nameField.getText(),
+                        deptField.getText(),
+                        Double.parseDouble(salaryField.getText()),
+                        ratingChoiceBox.getValue(),
+                        Integer.parseInt(experienceField.getText()),
+                        activeBox.isSelected(),
+                        imagePath[0]
+                );
+                employeeDatabase.addEmployee(newEmployee);
+                employees.setAll(employeeDatabase.getAllEmployees());
+                statusLabel.setText("Employee added successfully.");
+                dialog.close();
+            } catch (NumberFormatException ex) {
+                statusLabel.setText("Invalid input. Please check the fields.");
+            }
+        });
+
+        grid.addRow(0, new Label("Name:"), nameField);
+        grid.addRow(1, new Label("Department:"), deptField);
+        grid.addRow(2, new Label("Salary:"), salaryField);
+        grid.addRow(3, new Label("Experience (yrs):"), experienceField);
+        grid.addRow(4, new Label("Performance Rating:"), ratingChoiceBox);
+        grid.addRow(5, activeBox, uploadBtn);
+        grid.add(saveBtn, 1, 6);
+
+        Scene scene = new Scene(grid, 400, 300);
+        dialog.setScene(scene);
+        dialog.show();
     }
 
     @FXML
