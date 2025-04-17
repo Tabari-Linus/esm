@@ -2,41 +2,40 @@ package lii.employeemanagementsystem.ui;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.layout.*;
-import javafx.stage.Stage;
-import javafx.stage.FileChooser;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.stage.FileChooser;
 import lii.employeemanagementsystem.database.EmployeeDatabase;
 import lii.employeemanagementsystem.model.Employee;
 import lii.employeemanagementsystem.service.UniqueIdGenerator;
 
-import java.util.UUID;
-import java.io.File;
+import java.util.*;
 
 public class EmployeeManagementController {
 
     @FXML
     private TableView<Employee<UUID>> employeeTable;
     @FXML
-    private TableColumn<Employee<Integer>, Integer> idColumn;
+    private TableColumn<Employee<UUID>, UUID> idColumn;
     @FXML
-    private TableColumn<Employee<Integer>, String> nameColumn;
+    private TableColumn<Employee<UUID>, String> nameColumn;
     @FXML
-    private TableColumn<Employee<Integer>, String> departmentColumn;
+    private TableColumn<Employee<UUID>, String> departmentColumn;
     @FXML
-    private TableColumn<Employee<Integer>, Double> salaryColumn;
+    private TableColumn<Employee<UUID>, Double> salaryColumn;
     @FXML
-    private TableColumn<Employee<Integer>, Double> ratingColumn;
+    private TableColumn<Employee<UUID>, Double> ratingColumn;
+    @FXML
+    private TableColumn<Employee<UUID>, Integer> experienceColumn;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private ComboBox<String> sortOptions;
     @FXML
     private Label statusLabel;
 
     private final EmployeeDatabase<UUID> employeeDatabase = new EmployeeDatabase<>();
     private final ObservableList<Employee<UUID>> employees = FXCollections.observableArrayList();
-    private final ListView<Employee<UUID>> employeeListView = new ListView<>();
-    private final ComboBox<String> sortOptions = new ComboBox<>();
 
     @FXML
     public void initialize() {
@@ -46,9 +45,22 @@ public class EmployeeManagementController {
         departmentColumn.setCellValueFactory(data -> data.getValue().departmentProperty());
         salaryColumn.setCellValueFactory(data -> data.getValue().salaryProperty().asObject());
         ratingColumn.setCellValueFactory(data -> data.getValue().performanceRatingProperty().asObject());
+        experienceColumn.setCellValueFactory(data -> data.getValue().yearsOfExperienceProperty().asObject());
 
         // Set the table's items
         employeeTable.setItems(employees);
+
+        // Initialize sort options
+        sortOptions.setItems(FXCollections.observableArrayList(
+                "Sort by Experience",
+                "Sort by Salary",
+                "Sort by Performance Rating"
+        ));
+        sortOptions.setValue("Sort by Experience");
+        sortOptions.setOnAction(e -> sortEmployees());
+
+        // Add search functionality
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> filterEmployees(newVal));
 
         // Load initial data
         loadSampleData();
@@ -68,97 +80,51 @@ public class EmployeeManagementController {
 
     @FXML
     private void onAddEmployee() {
-        showAddDialog();
         // Logic to add a new employee (e.g., show a dialog to input details)
         statusLabel.setText("Add Employee clicked.");
     }
 
     @FXML
-    private void onUpdateEmployee() {
-        // Logic to update selected employee details
-        Employee<UUID> selectedEmployee = employeeTable.getSelectionModel().getSelectedItem();
-        if (selectedEmployee != null) {
-            statusLabel.setText("Update Employee: " + selectedEmployee.getName());
-        } else {
-            statusLabel.setText("No employee selected for update.");
-        }
-    }
-
-    @FXML
-    private void onRemoveEmployee() {
-        // Logic to remove the selected employee
-        Employee<UUID> selectedEmployee = employeeTable.getSelectionModel().getSelectedItem();
-        if (selectedEmployee != null) {
-            employeeDatabase.removeEmployee(selectedEmployee.getEmployeeId());
-            employees.remove(selectedEmployee);
-            statusLabel.setText("Removed Employee: " + selectedEmployee.getName());
-        } else {
-            statusLabel.setText("No employee selected for removal.");
-        }
-    }
-
-    @FXML
-    private void onRaiseSalary() {
-        // Logic to raise salary for employees with high performance
-        employeeDatabase.giveSalaryRaise(10, 4.5);
-        employees.setAll(employeeDatabase.getAllEmployees());
-        statusLabel.setText("Raised salary for high-performing employees.");
-    }
-
-
-    private void showAddDialog() {
-        Stage dialog = new Stage();
-        dialog.setTitle("Add New Employee");
-
-        GridPane grid = new GridPane();
-        grid.setPadding(new Insets(10));
-        grid.setHgap(10);
-        grid.setVgap(10);
-
-        TextField nameField = new TextField();
-        TextField deptField = new TextField();
-        TextField salaryField = new TextField();
-        TextField ratingField = new TextField();
-        TextField experienceField = new TextField();
-        CheckBox activeBox = new CheckBox("Active");
-        Button uploadBtn = new Button("Upload Image");
-        final String[] imagePath = {"file:images/placeholder.jpg"};
-
-        uploadBtn.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            File selected = fileChooser.showOpenDialog(dialog);
-            if (selected != null) {
-                imagePath[0] = selected.toURI().toString();
+    private void onDeleteById() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Delete Employee");
+        dialog.setHeaderText("Enter the Employee ID to delete:");
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(idStr -> {
+            try {
+                UUID id = UUID.fromString(idStr);
+                employeeDatabase.removeEmployee(id);
+                employees.setAll(employeeDatabase.getAllEmployees());
+                statusLabel.setText("Employee deleted successfully.");
+            } catch (IllegalArgumentException e) {
+                statusLabel.setText("Invalid UUID format.");
             }
         });
+    }
 
-        Button saveBtn = new Button("Save");
-        saveBtn.setOnAction(e -> {
-            Employee<UUID> newEmp = new Employee<>(
-                    UniqueIdGenerator.generateUniqueId(),
-                    nameField.getText(),
-                    deptField.getText(),
-                    Double.parseDouble(salaryField.getText()),
-                    Double.parseDouble(ratingField.getText()),
-                    Integer.parseInt(experienceField.getText()),
-                    activeBox.isSelected(),
-                    imagePath[0]
-            );
-            employeeDatabase.addEmployee(newEmp);
-            employees.setAll(employeeDatabase.getAllEmployees());
-            dialog.close();
-        });
+    private void sortEmployees() {
+        String selected = sortOptions.getValue();
+        List<Employee<UUID>> sorted = new ArrayList<>(employees);
 
-        grid.addRow(0, new Label("Name:"), nameField);
-        grid.addRow(1, new Label("Department:"), deptField);
-        grid.addRow(2, new Label("Salary:"), salaryField);
-        grid.addRow(3, new Label("Performance Rating:"), ratingField);
-        grid.addRow(4, new Label("Experience (yrs):"), experienceField);
-        grid.addRow(5, activeBox, uploadBtn);
-        grid.add(saveBtn, 1, 6);
+        if (selected.equals("Sort by Salary")) {
+            sorted.sort(Comparator.comparingDouble(Employee<UUID>::getSalary).reversed());
+        } else if (selected.equals("Sort by Performance Rating")) {
+            sorted.sort(Comparator.comparingDouble(Employee<UUID>::getPerformanceRating).reversed());
+        } else {
+            sorted.sort(Comparator.comparingInt(Employee<UUID>::getYearsOfExperience).reversed());
+        }
 
-        Scene scene = new Scene(grid, 400, 300);
-        dialog.setScene(scene);
-        dialog.show();
+        employees.setAll(sorted);
+    }
+
+    private void filterEmployees(String keyword) {
+        keyword = keyword.toLowerCase();
+        List<Employee<UUID>> filtered = new ArrayList<>();
+        for (Employee<UUID> emp : employeeDatabase.getAllEmployees()) {
+            if (emp.getName().toLowerCase().contains(keyword) || emp.getDepartment().toLowerCase().contains(keyword)) {
+                filtered.add(emp);
+            }
+        }
+        employees.setAll(filtered);
     }
 }
