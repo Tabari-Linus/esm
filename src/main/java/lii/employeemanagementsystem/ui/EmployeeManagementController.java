@@ -13,6 +13,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lii.employeemanagementsystem.database.EmployeeDatabase;
 import lii.employeemanagementsystem.model.Employee;
+import lii.employeemanagementsystem.model.EmployeePerformanceComparator;
+import lii.employeemanagementsystem.model.EmployeeSalaryComparator;
 import lii.employeemanagementsystem.service.UniqueIdGenerator;
 
 import java.io.File;
@@ -55,6 +57,10 @@ public class EmployeeManagementController {
     private TextField maxSalaryField;
     @FXML
     private ToggleGroup filterToggleGroup;
+    @FXML
+    private TextField raisePercentageField;
+    @FXML
+    private TextField departmentField;
 
 
 
@@ -255,9 +261,7 @@ public class EmployeeManagementController {
             // Apply rating filter if slider value is greater than 0
             double minRating = ratingFilterSlider.getValue();
             if (minRating > 0) {
-                filteredList = filteredList.stream()
-                        .filter(employee -> employee.getPerformanceRating() >= minRating)
-                        .collect(Collectors.toList());
+                filteredList = employeeDatabase.searchByMinimumPerformanceRating(minRating);
             }
 
             // Apply salary filter if both fields are filled
@@ -267,7 +271,7 @@ public class EmployeeManagementController {
                 double minSalary = Double.parseDouble(minSalaryText);
                 double maxSalary = Double.parseDouble(maxSalaryText);
                 filteredList = filteredList.stream()
-                        .filter(employee -> employee.getSalary() >= minSalary && employee.getSalary() <= maxSalary)
+                        .filter(employee -> employeeDatabase.searchBySalaryRange(minSalary, maxSalary).contains(employee))
                         .collect(Collectors.toList());
             }
 
@@ -385,11 +389,12 @@ public class EmployeeManagementController {
         List<Employee<UUID>> sorted = new ArrayList<>(employees);
 
         if (selected.equals("Sort by Salary")) {
-            sorted.sort(Comparator.comparingDouble(Employee<UUID>::getSalary).reversed());
+            sorted.sort(new EmployeeSalaryComparator<>());
         } else if (selected.equals("Sort by Performance Rating")) {
-            sorted.sort(Comparator.comparingDouble(Employee<UUID>::getPerformanceRating).reversed());
+            sorted.sort(new EmployeePerformanceComparator<>());
         } else {
-            sorted.sort(Comparator.comparingInt(Employee<UUID>::getYearsOfExperience).reversed());
+            // Use the compareTo method from the Employee class
+            sorted.sort(Employee::compareTo);
         }
 
         employees.setAll(sorted);
@@ -398,5 +403,50 @@ public class EmployeeManagementController {
     private void filterEmployees(String keyword) {
         keyword = keyword.toLowerCase();
         employees.setAll(employeeDatabase.searchByTerm(keyword));
+    }
+
+    @FXML
+    private void onApplySalaryRaise() {
+        try {
+            double percentage = Double.parseDouble(raisePercentageField.getText());
+            employeeDatabase.giveSalaryRaise(percentage, 4.5); // Apply raise for employees with rating ≥ 4.5
+            employees.setAll(employeeDatabase.getAllEmployees()); // Refresh the table
+            statusLabel.setText("Salary raise applied successfully.");
+        } catch (NumberFormatException e) {
+            statusLabel.setText("Invalid percentage. Please enter a valid number.");
+        }
+    }
+
+    @FXML
+    private void onViewTop5HighestPaid() {
+        List<Employee<UUID>> top5Employees = employeeDatabase.getTop5HighestPaidEmployees();
+        StringBuilder message = new StringBuilder("Top 5 Highest Paid Employees:\n");
+        for (Employee<UUID> employee : top5Employees) {
+            message.append(String.format("- %s: $%.2f\n", employee.getName(), employee.getSalary()));
+        }
+        showAlert("Top 5 Highest Paid Employees", message.toString());
+    }
+
+    @FXML
+    private void onCalculateAverageSalary() {
+        String department = departmentField.getText();
+        if (department.isEmpty()) {
+            statusLabel.setText("Please enter a department.");
+            return;
+        }
+        double averageSalary = employeeDatabase.calculateAverageSalaryByDepartment(department);
+        if (averageSalary > 0) {
+            statusLabel.setText(String.format("Average salary in %s: $%.2f", department, averageSalary));
+        } else {
+            statusLabel.setText("No employees found in the specified department.");
+        }
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

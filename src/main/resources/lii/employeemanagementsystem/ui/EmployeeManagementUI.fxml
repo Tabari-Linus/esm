@@ -9,26 +9,6 @@
         <Button text="Add Employee" onAction="#onAddEmployee" />
     </HBox>
 
-<!--    <HBox spacing="20" alignment="CENTER">-->
-<!--        &lt;!&ndash; Filter Inputs &ndash;&gt;-->
-<!--        <VBox spacing="10" alignment="CENTER_LEFT">-->
-<!--            <Slider fx:id="ratingFilterSlider" min="0" max="5" value="0" showTickLabels="true" showTickMarks="true" majorTickUnit="1" blockIncrement="0.1" />-->
-<!--            <HBox fx:id="salaryFilterBox" spacing="5" visible="false" managed="false">-->
-<!--                <TextField fx:id="minSalaryField" promptText="Min Salary" prefWidth="150" />-->
-<!--                <TextField fx:id="maxSalaryField" promptText="Max Salary" prefWidth="150" />-->
-<!--            </HBox>-->
-<!--        </VBox>-->
-
-<!--        &lt;!&ndash; Filter Buttons &ndash;&gt;-->
-<!--        <VBox spacing="10" alignment="CENTER_RIGHT">-->
-<!--            <HBox spacing="10" alignment="CENTER">-->
-<!--                <RadioButton fx:id="filterByRating" text="Filter by Rating" toggleGroup="$filterToggleGroup" />-->
-<!--                <RadioButton fx:id="filterBySalary" text="Filter by Salary" toggleGroup="$filterToggleGroup" />-->
-<!--            </HBox>-->
-<!--            <Button text="Apply Filter" onAction="#onApplyFilter" />-->
-<!--        </VBox>-->
-<!--    </HBox>-->
-
 
     <HBox spacing="20" alignment="CENTER">
         <!-- Filter Inputs -->
@@ -51,6 +31,31 @@
     </HBox>
 
     <Button text="Apply Filter" onAction="#onApplyFilter" />
+
+
+    <VBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 10;">
+        <!-- Salary Management Section -->
+        <TitledPane text="Salary Management" expanded="false">
+            <VBox spacing="10" style="-fx-padding: 10;">
+                <!-- Salary Raise -->
+                <HBox spacing="10">
+                    <Label text="Salary Raise (%):" />
+                    <TextField fx:id="raisePercentageField" promptText="Enter percentage" />
+                    <Button text="Apply Raise" onAction="#onApplySalaryRaise" />
+                </HBox>
+
+                <!-- Top 5 Highest Paid -->
+                <Button text="View Top 5 Highest Paid Employees" onAction="#onViewTop5HighestPaid" />
+
+                <!-- Average Salary by Department -->
+                <HBox spacing="10">
+                    <Label text="Department:" />
+                    <TextField fx:id="departmentField" promptText="Enter department" />
+                    <Button text="Calculate Average Salary" onAction="#onCalculateAverageSalary" />
+                </HBox>
+            </VBox>
+        </TitledPane>
+    </VBox>
 
     <TableView fx:id="employeeTable" prefHeight="400" prefWidth="800">
         <columns>
