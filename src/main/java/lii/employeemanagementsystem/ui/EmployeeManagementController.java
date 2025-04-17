@@ -6,6 +6,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -305,6 +306,13 @@ public class EmployeeManagementController {
         card.setPadding(new Insets(20));
         card.setStyle("-fx-background-color: #f9f9f9; -fx-border-color: #ccc; -fx-border-radius: 10; -fx-background-radius: 10;");
 
+        // Profile Picture
+        ImageView profilePicture = new ImageView(employee.getProfilePicture());
+        profilePicture.setFitWidth(100);
+        profilePicture.setFitHeight(100);
+        profilePicture.setStyle("-fx-border-radius: 100; -fx-background-radius: 50; -fx-effect: dropshadow(gaussian, gray, 5, 0.5, 0, 0);");
+
+        // Employee Details
         Label nameLabel = new Label("Name: " + employee.getName());
         Label deptLabel = new Label("Department: " + employee.getDepartment());
         Label salaryLabel = new Label("Salary: $" + employee.getSalary());
@@ -312,6 +320,7 @@ public class EmployeeManagementController {
         Label experienceLabel = new Label("Experience: " + employee.getYearsOfExperience() + " years");
         Label activeLabel = new Label("Active: " + (employee.isActive() ? "Yes" : "No"));
 
+        // Buttons
         Button editButton = new Button("Edit");
         editButton.setOnAction(e -> {
             dialog.close();
@@ -325,13 +334,19 @@ public class EmployeeManagementController {
         });
 
         HBox actions = new HBox(10, editButton, deleteButton);
-        card.getChildren().addAll(nameLabel, deptLabel, salaryLabel, ratingLabel, experienceLabel, activeLabel, actions);
+
+        // Layout
+        HBox header = new HBox(10, new VBox(10, nameLabel, deptLabel, salaryLabel, ratingLabel, experienceLabel, activeLabel, actions), profilePicture);
+        header.setSpacing(20);
+        header.setPadding(new Insets(10));
+        header.setStyle("-fx-alignment: top-right;");
+
+        card.getChildren().add(header);
 
         Scene scene = new Scene(card, 400, 300);
         dialog.setScene(scene);
         dialog.show();
     }
-
     private void showEditDialog(Employee<UUID> employee) {
         Stage dialog = new Stage();
         dialog.setTitle("Edit Employee");
