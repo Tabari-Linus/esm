@@ -58,6 +58,7 @@ public class MainApp extends Application {
             ImageView profilePicture = new ImageView(new Image(authenticatedUser.getProfilePicture()));
             profilePicture.setFitWidth(50);
             profilePicture.setFitHeight(50);
+            mainStage.setTitle("Employee Management System");
 
             // User name
             Text userName = new Text("Welcome, " + authenticatedUser.getUsername());
@@ -77,7 +78,7 @@ public class MainApp extends Application {
 
             Scene scene = new Scene(root);
             mainStage.setScene(scene);
-            mainStage.setTitle("Employee Management System");
+
             mainStage.show();
         } catch (Exception e) {
             e.printStackTrace();

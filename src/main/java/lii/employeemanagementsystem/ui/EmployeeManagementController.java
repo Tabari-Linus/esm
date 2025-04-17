@@ -61,7 +61,7 @@ public class EmployeeManagementController {
     @FXML
     private TextField raisePercentageField;
     @FXML
-    private TextField departmentField;
+    private ComboBox<String> departmentField;
     @FXML
     private TextField minRatingField;
     @FXML
@@ -98,16 +98,6 @@ public class EmployeeManagementController {
                 });
             }
 
-//            @Override
-//            protected void updateItem(Void item, boolean empty) {
-//                super.updateItem(item, empty);
-//                if (empty) {
-//                    setGraphic(null);
-//                } else {
-//                    HBox buttons = new HBox(10, viewButton, deleteButton);
-//                    setGraphic(buttons);
-//                }
-//            }
         });
 
         sortOptions.setItems(FXCollections.observableArrayList(
@@ -199,7 +189,8 @@ public class EmployeeManagementController {
             grid.setVgap(10);
 
             TextField nameField = new TextField();
-            TextField deptField = new TextField();
+            ComboBox<String> deptComboBox = new ComboBox<>();
+            deptComboBox.setItems(FXCollections.observableArrayList("IT", "Finance", "HR", "Engineering", "Marketing"));
             TextField salaryField = new TextField();
             TextField experienceField = new TextField();
             CheckBox activeBox = new CheckBox("Active");
@@ -227,10 +218,15 @@ public class EmployeeManagementController {
             Button saveBtn = new Button("Save");
             saveBtn.setOnAction(e -> {
                 try {
+                    if (nameField.getText().isEmpty() || deptComboBox.getValue() == null || salaryField.getText().isEmpty() || experienceField.getText().isEmpty()) {
+                        showAlert("Error", "All fields must be filled.");
+                        return;
+                    }
+
                     Employee<UUID> newEmployee = new Employee<>(
                             UniqueIdGenerator.generateUniqueId(),
                             nameField.getText(),
-                            deptField.getText(),
+                            deptComboBox.getValue(),
                             Double.parseDouble(salaryField.getText()),
                             ratingSlider.getValue(),
                             Integer.parseInt(experienceField.getText()),
@@ -249,7 +245,7 @@ public class EmployeeManagementController {
             });
 
             grid.addRow(0, new Label("Name:"), nameField);
-            grid.addRow(1, new Label("Department:"), deptField);
+            grid.addRow(1, new Label("Department:"), deptComboBox);
             grid.addRow(2, new Label("Salary:"), salaryField);
             grid.addRow(3, new Label("Experience (yrs):"), experienceField);
             grid.addRow(4, new Label("Performance Rating:"), ratingSlider);
@@ -367,7 +363,9 @@ public class EmployeeManagementController {
         grid.setVgap(10);
 
         TextField nameField = new TextField(employee.getName());
-        TextField deptField = new TextField(employee.getDepartment());
+        ComboBox<String> deptComboBox = new ComboBox<>();
+        deptComboBox.setItems(FXCollections.observableArrayList("IT", "Finance", "HR", "Engineering", "Marketing"));
+        deptComboBox.setValue(employee.getDepartment());
         TextField salaryField = new TextField(String.valueOf(employee.getSalary()));
         TextField experienceField = new TextField(String.valueOf(employee.getYearsOfExperience()));
         Slider ratingSlider = new Slider(0, 5, employee.getPerformanceRating());
@@ -381,8 +379,13 @@ public class EmployeeManagementController {
         Button saveButton = new Button("Save");
         saveButton.setOnAction(e -> {
             try {
+                if (nameField.getText().isEmpty() || deptComboBox.getValue() == null || salaryField.getText().isEmpty() || experienceField.getText().isEmpty()) {
+                    showAlert("Error", "All fields must be filled.");
+                    return;
+                }
+
                 employee.setName(nameField.getText());
-                employee.setDepartment(deptField.getText());
+                employee.setDepartment(deptComboBox.getValue());
                 employee.setSalary(Double.parseDouble(salaryField.getText()));
                 employee.setYearsOfExperience(Integer.parseInt(experienceField.getText()));
                 employee.setPerformanceRating(ratingSlider.getValue());
@@ -391,12 +394,12 @@ public class EmployeeManagementController {
                 statusLabel.setText("Employee updated successfully.");
                 dialog.close();
             } catch (NumberFormatException ex) {
-                statusLabel.setText("Invalid input. Please check the fields.");
+                showAlert("Error", "Invalid input. Please check the fields.");
             }
         });
 
         grid.addRow(0, new Label("Name:"), nameField);
-        grid.addRow(1, new Label("Department:"), deptField);
+        grid.addRow(1, new Label("Department:"), deptComboBox);
         grid.addRow(2, new Label("Salary:"), salaryField);
         grid.addRow(3, new Label("Experience (yrs):"), experienceField);
         grid.addRow(4, new Label("Performance Rating:"), ratingSlider);
@@ -404,7 +407,7 @@ public class EmployeeManagementController {
         grid.add(saveButton, 1, 6);
 
         VBox container = new VBox(grid);
-        container.setPadding(new Insets(20)); // Add padding around the content
+        container.setPadding(new Insets(20));
 
         Scene scene = new Scene(container, 400, 300);
         dialog.setScene(scene);
@@ -469,7 +472,7 @@ public class EmployeeManagementController {
     @FXML
     private void onCalculateAverageSalary() {
         try {
-            String department = departmentField.getText();
+            String department = departmentField.getValue();
             if (department.isEmpty()) {
                 showAlert("Error", "Please enter a department.");
                 return;
