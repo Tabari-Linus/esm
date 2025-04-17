@@ -17,6 +17,7 @@ import lii.employeemanagementsystem.service.UniqueIdGenerator;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class EmployeeManagementController {
 
@@ -47,7 +48,7 @@ public class EmployeeManagementController {
     @FXML
     private Slider ratingFilterSlider;
     @FXML
-    private VBox salaryFilterBox;
+    private HBox salaryFilterBox;
     @FXML
     private TextField minSalaryField;
     @FXML
@@ -247,21 +248,37 @@ public class EmployeeManagementController {
 
     @FXML
     private void onApplyFilter() {
-        if (filterByRating.isSelected()) {
+        try {
+            // Initialize filtered list with all employees
+            List<Employee<UUID>> filteredList = new ArrayList<>(employeeDatabase.getAllEmployees());
+
+            // Apply rating filter if slider value is greater than 0
             double minRating = ratingFilterSlider.getValue();
-            employees.setAll(employeeDatabase.searchByMinimumPerformanceRating(minRating));
-            statusLabel.setText("Filtered by minimum performance rating: " + minRating);
-        } else if (filterBySalary.isSelected()) {
-            try {
-                double minSalary = Double.parseDouble(minSalaryField.getText());
-                double maxSalary = Double.parseDouble(maxSalaryField.getText());
-                employees.setAll(employeeDatabase.searchBySalaryRange(minSalary, maxSalary));
-                statusLabel.setText("Filtered by salary range: " + minSalary + " - " + maxSalary);
-            } catch (NumberFormatException ex) {
-                statusLabel.setText("Invalid salary range input.");
+            if (minRating > 0) {
+                filteredList = filteredList.stream()
+                        .filter(employee -> employee.getPerformanceRating() >= minRating)
+                        .collect(Collectors.toList());
             }
+
+            // Apply salary filter if both fields are filled
+            String minSalaryText = minSalaryField.getText();
+            String maxSalaryText = maxSalaryField.getText();
+            if (!minSalaryText.isEmpty() && !maxSalaryText.isEmpty()) {
+                double minSalary = Double.parseDouble(minSalaryText);
+                double maxSalary = Double.parseDouble(maxSalaryText);
+                filteredList = filteredList.stream()
+                        .filter(employee -> employee.getSalary() >= minSalary && employee.getSalary() <= maxSalary)
+                        .collect(Collectors.toList());
+            }
+
+            // Update the table with the filtered list
+            employees.setAll(filteredList);
+            statusLabel.setText("Filters applied successfully.");
+        } catch (NumberFormatException ex) {
+            statusLabel.setText("Invalid input. Please check the salary fields.");
         }
     }
+
 
     private void confirmAndDeleteEmployee(Employee<UUID> employee) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
