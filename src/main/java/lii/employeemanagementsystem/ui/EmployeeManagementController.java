@@ -40,6 +40,22 @@ public class EmployeeManagementController {
     private ComboBox<String> sortOptions;
     @FXML
     private Label statusLabel;
+    @FXML
+    private RadioButton filterByRating;
+    @FXML
+    private RadioButton filterBySalary;
+    @FXML
+    private Slider ratingFilterSlider;
+    @FXML
+    private VBox salaryFilterBox;
+    @FXML
+    private TextField minSalaryField;
+    @FXML
+    private TextField maxSalaryField;
+    @FXML
+    private ToggleGroup filterToggleGroup;
+
+
 
 
     private final EmployeeDatabase<UUID> employeeDatabase = new EmployeeDatabase<>();
@@ -69,7 +85,6 @@ public class EmployeeManagementController {
                     showEmployeeDetails(employee);
                 });
             }
-
 
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -121,6 +136,31 @@ public class EmployeeManagementController {
             }
         });
 
+        filterToggleGroup = new ToggleGroup();
+        filterByRating.setToggleGroup(filterToggleGroup);
+        filterBySalary.setToggleGroup(filterToggleGroup);
+
+
+        filterByRating.setOnAction(e -> {
+            if (filterByRating.isSelected()) {
+                salaryFilterBox.setVisible(false);
+                ratingFilterSlider.setVisible(true);
+            }
+        });
+        filterBySalary.setOnAction(e -> {
+            if (filterBySalary.isSelected()) {
+                salaryFilterBox.setVisible(true);
+                ratingFilterSlider.setVisible(false);
+            }
+        });
+        filterByRating.setSelected(true);
+        salaryFilterBox.setVisible(false);
+        ratingFilterSlider.setVisible(true);
+        ratingFilterSlider.setMin(0);
+
+
+
+        ratingFilterSlider.setOnMouseReleased(e -> onApplyFilter());
         loadSampleData();
     }
 
@@ -203,6 +243,24 @@ public class EmployeeManagementController {
         Scene scene = new Scene(container, 400, 300);
         dialog.setScene(scene);
         dialog.show();
+    }
+
+    @FXML
+    private void onApplyFilter() {
+        if (filterByRating.isSelected()) {
+            double minRating = ratingFilterSlider.getValue();
+            employees.setAll(employeeDatabase.searchByMinimumPerformanceRating(minRating));
+            statusLabel.setText("Filtered by minimum performance rating: " + minRating);
+        } else if (filterBySalary.isSelected()) {
+            try {
+                double minSalary = Double.parseDouble(minSalaryField.getText());
+                double maxSalary = Double.parseDouble(maxSalaryField.getText());
+                employees.setAll(employeeDatabase.searchBySalaryRange(minSalary, maxSalary));
+                statusLabel.setText("Filtered by salary range: " + minSalary + " - " + maxSalary);
+            } catch (NumberFormatException ex) {
+                statusLabel.setText("Invalid salary range input.");
+            }
+        }
     }
 
     private void confirmAndDeleteEmployee(Employee<UUID> employee) {
