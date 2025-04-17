@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="lii.employeemanagementsystem.ui.EmployeeManagementController" spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+    <Label text="Employee Management System" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+    <TableView fx:id="employeeTable" prefHeight="300" prefWidth="600">
+        <columns>
+            <TableColumn text="ID" fx:id="idColumn" prefWidth="50" />
+            <TableColumn text="Name" fx:id="nameColumn" prefWidth="150" />
+            <TableColumn text="Department" fx:id="departmentColumn" prefWidth="150" />
+            <TableColumn text="Salary" fx:id="salaryColumn" prefWidth="100" />
+            <TableColumn text="Performance Rating" fx:id="ratingColumn" prefWidth="150" />
+        </columns>
+    </TableView>
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Add Employee" onAction="#onAddEmployee" />
+        <Button text="Update Employee" onAction="#onUpdateEmployee" />
+        <Button text="Remove Employee" onAction="#onRemoveEmployee" />
+        <Button text="Raise Salary" onAction="#onRaiseSalary" />
+    </HBox>
+    <Label fx:id="statusLabel" text="Status: Ready" style="-fx-font-size: 14px;" />
+</VBox>
