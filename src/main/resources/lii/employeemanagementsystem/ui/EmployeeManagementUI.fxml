@@ -39,7 +39,9 @@
             <VBox spacing="10" style="-fx-padding: 10;">
                 <!-- Salary Raise -->
                 <HBox spacing="10">
-                    <Label text="Salary Raise (%):" />
+                    <Label text="Minimum Rating:" />
+                    <TextField fx:id="minRatingField" promptText="Enter minimum rating" />
+                    <Label text="Raise (%):" />
                     <TextField fx:id="raisePercentageField" promptText="Enter percentage" />
                     <Button text="Apply Raise" onAction="#onApplySalaryRaise" />
                 </HBox>

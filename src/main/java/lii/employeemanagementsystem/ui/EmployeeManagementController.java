@@ -61,7 +61,8 @@ public class EmployeeManagementController {
     private TextField raisePercentageField;
     @FXML
     private TextField departmentField;
-
+    @FXML
+    private TextField minRatingField;
 
 
 
@@ -409,11 +410,13 @@ public class EmployeeManagementController {
     private void onApplySalaryRaise() {
         try {
             double percentage = Double.parseDouble(raisePercentageField.getText());
-            employeeDatabase.giveSalaryRaise(percentage, 4.5); // Apply raise for employees with rating ≥ 4.5
+            double minRating = Double.parseDouble(minRatingField.getText());
+
+            employeeDatabase.giveSalaryRaise(percentage, minRating); // Apply raise for employees with rating ≥ minRating
             employees.setAll(employeeDatabase.getAllEmployees()); // Refresh the table
-            statusLabel.setText("Salary raise applied successfully.");
+            showAlert("Success", "Salary raise applied successfully.");
         } catch (NumberFormatException e) {
-            statusLabel.setText("Invalid percentage. Please enter a valid number.");
+            showAlert("Error", "Invalid input. Please enter valid numbers.");
         }
     }
 
@@ -431,14 +434,14 @@ public class EmployeeManagementController {
     private void onCalculateAverageSalary() {
         String department = departmentField.getText();
         if (department.isEmpty()) {
-            statusLabel.setText("Please enter a department.");
+            showAlert("Error", "Please enter a department.");
             return;
         }
         double averageSalary = employeeDatabase.calculateAverageSalaryByDepartment(department);
         if (averageSalary > 0) {
-            statusLabel.setText(String.format("Average salary in %s: $%.2f", department, averageSalary));
+            showAlert("Average Salary", String.format("Average salary in %s: $%.2f", department, averageSalary));
         } else {
-            statusLabel.setText("No employees found in the specified department.");
+            showAlert("Average Salary", "No employees found in the specified department.");
         }
     }
 
