@@ -1,7 +1,5 @@
 package lii.employeemanagementsystem.database;
-
 import lii.employeemanagementsystem.model.Employee;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -10,6 +8,17 @@ public class EmployeeDatabase<T> {
 
     // Add a new employee
     public void addEmployee(Employee<T> employee) {
+        try {
+            if (employee.getSalary() < 0) {
+                throw new IllegalArgumentException("Salary cannot be negative.");
+            }
+            if (employee.getDepartment() == null || employee.getDepartment().isEmpty()) {
+                throw new IllegalArgumentException("Department cannot be null or empty.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error adding employee: " + e.getMessage());
+            return;
+        }
         if (employeeMap.containsKey(employee.getEmployeeId())) {
             throw new IllegalArgumentException("Employee with ID " + employee.getEmployeeId() + " already exists.");
         }
