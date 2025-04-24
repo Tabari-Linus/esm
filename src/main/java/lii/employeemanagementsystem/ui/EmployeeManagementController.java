@@ -13,6 +13,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import lii.employeemanagementsystem.customExceptions.EmployeeNotFoundException;
+import lii.employeemanagementsystem.customExceptions.InvalidDepartmentException;
+import lii.employeemanagementsystem.customExceptions.InvalidPerformanceRatingException;
+import lii.employeemanagementsystem.customExceptions.InvalidSalaryException;
 import lii.employeemanagementsystem.database.EmployeeDatabase;
 import lii.employeemanagementsystem.model.Employee;
 import lii.employeemanagementsystem.model.EmployeePerformanceComparator;
@@ -230,30 +234,61 @@ public class EmployeeManagementController {
             Button saveBtn = new Button("Save");
             saveBtn.setOnAction(e -> {
                 try {
-                    if (nameField.getText().isEmpty() || deptComboBox.getValue() == null || salaryField.getText().isEmpty() || experienceField.getText().isEmpty()) {
-                        showAlert("Error", "All fields must be filled.");
+                    if (nameField.getText().isEmpty() ) {
+                        showAlert("Error", "Name field cannot be empty.");
+                        return;
+                    } else if (deptComboBox.getValue() == null) {
+                        showAlert("Error", "Department field cannot be empty.");
+                        return;
+                    } else if (salaryField.getText().isEmpty()) {
+                    showAlert("Error", "Salary field cannot be empty.");
+                    return;
+                } else if (experienceField.getText().isEmpty()) {
+                        showAlert("Error", "Experience field cannot be empty.");
                         return;
                     }
 
-                    Employee<UUID> newEmployee = new Employee<>(
-                            UniqueIdGenerator.generateUniqueId(),
-                            nameField.getText(),
-                            deptComboBox.getValue(),
-                            Double.parseDouble(salaryField.getText()),
-                            ratingSlider.getValue(),
-                            Integer.parseInt(experienceField.getText()),
-                            activeBox.isSelected(),
-                            imagePath[0]
-                    );
-                    employeeDatabase.addEmployee(newEmployee);
-                    employees.setAll(employeeDatabase.getAllEmployees());
-                    statusLabel.setText("Employee added successfully.");
-                    dialog.close();
-                } catch (NumberFormatException ex) {
-                    showAlert("Error", "Invalid input. Please check the fields.");
                 } catch (Exception ex) {
                     showAlert("Error", "Failed to add employee: " + ex.getMessage());
                 }
+
+                try {
+                    if (Double.parseDouble(salaryField.getText()) < 0) {
+                        showAlert("Error", "Salary cannot be negative.");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    showAlert("Error", "Salary must be a valid number.");
+                    return;
+                }
+
+                try {
+                    if (Integer.parseInt(experienceField.getText()) < 0) {
+                        showAlert("Error", "Experience cannot be negative.");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    showAlert("Error", "Experience must be a valid number.");
+                    return;
+                }
+
+
+
+                Employee<UUID> newEmployee = new Employee<>(
+                        UniqueIdGenerator.generateUniqueId(),
+                        nameField.getText(),
+                        deptComboBox.getValue(),
+                        Double.parseDouble(salaryField.getText()),
+                        ratingSlider.getValue(),
+                        Integer.parseInt(experienceField.getText()),
+                        activeBox.isSelected(),
+                        imagePath[0]
+                );
+                employeeDatabase.addEmployee(newEmployee);
+                employees.setAll(employeeDatabase.getAllEmployees());
+                statusLabel.setText("Employee added successfully.");
+                dialog.close();
+
             });
 
             grid.addRow(0, new Label("Name:"), nameField);
@@ -283,24 +318,29 @@ public class EmployeeManagementController {
             List<Employee<UUID>> filteredList = new ArrayList<>(employeeDatabase.getAllEmployees());
 
             double minRating = ratingFilterSlider.getValue();
-            if (minRating > 0) {
+            if (minRating >= 0) {
                 filteredList = employeeDatabase.searchByMinimumPerformanceRating(minRating);
             }
 
             String minSalaryText = minSalaryField.getText();
             String maxSalaryText = maxSalaryField.getText();
             if (!minSalaryText.isEmpty() && !maxSalaryText.isEmpty()) {
-                double minSalary = Double.parseDouble(minSalaryText);
-                double maxSalary = Double.parseDouble(maxSalaryText);
-                filteredList = filteredList.stream()
-                        .filter(employee -> employeeDatabase.searchBySalaryRange(minSalary, maxSalary).contains(employee))
-                        .collect(Collectors.toList());
+                try {
+                    double minSalary = Double.parseDouble(minSalaryText);
+                    double maxSalary = Double.parseDouble(maxSalaryText);
+
+                    filteredList = filteredList.stream()
+                            .filter(employee -> employeeDatabase.searchBySalaryRange(minSalary, maxSalary).contains(employee))
+                            .collect(Collectors.toList());
+                } catch (NumberFormatException e) {
+                    showAlert("Error", "Salary input ranges are Invalid. Please enter valid numbers.");
+                } catch (InvalidSalaryException e) {
+                    showAlert("Error", e.getMessage());
+                }
             }
 
             employees.setAll(filteredList);
             statusLabel.setText("Filters applied successfully.");
-        } catch (NumberFormatException ex) {
-            showAlert("Error", "Invalid input. Please check the salary fields.");
         } catch (Exception ex) {
             showAlert("Error", "Failed to apply filters: " + ex.getMessage());
         }
@@ -313,11 +353,18 @@ public class EmployeeManagementController {
         confirm.setHeaderText("Are you sure you want to delete " + employee.getName() + "?");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            employeeDatabase.removeEmployee(employee.getEmployeeId());
-            employees.setAll(employeeDatabase.getAllEmployees());
-            statusLabel.setText("Employee deleted successfully.");
-            totalEmployeesLabel.setText(String.valueOf(employeeDatabase.getAllEmployees().size()));
-            visibleEmployeesLabel.setText(String.valueOf(employees.size()));
+            try {
+                employeeDatabase.removeEmployee(employee.getEmployeeId());
+                employees.setAll(employeeDatabase.getAllEmployees());
+                statusLabel.setText("Employee deleted successfully.");
+                totalEmployeesLabel.setText(String.valueOf(employeeDatabase.getAllEmployees().size()));
+                visibleEmployeesLabel.setText(String.valueOf(employees.size()));
+            } catch (EmployeeNotFoundException e){
+                showAlert("Error", e.getMessage());
+            }
+            catch (Exception ex) {
+                showAlert("Error", "Failed to delete employee: " + ex.getMessage());
+            }
         }
     }
 
@@ -395,8 +442,17 @@ public class EmployeeManagementController {
         Button saveButton = new Button("Save");
         saveButton.setOnAction(e -> {
             try {
-                if (nameField.getText().isEmpty() || deptComboBox.getValue() == null || salaryField.getText().isEmpty() || experienceField.getText().isEmpty()) {
-                    showAlert("Error", "All fields must be filled.");
+                if (nameField.getText().isEmpty() ) {
+                    showAlert("Error", "Name field cannot be empty.");
+                    return;
+                } else if (deptComboBox.getValue() == null) {
+                    showAlert("Error", "Department field cannot be empty.");
+                    return;
+                } else if (salaryField.getText().isEmpty()) {
+                    showAlert("Error", "Salary field cannot be empty.");
+                    return;
+                } else if (experienceField.getText().isEmpty()) {
+                    showAlert("Error", "Experience field cannot be empty.");
                     return;
                 }
 
@@ -409,8 +465,12 @@ public class EmployeeManagementController {
                 employees.setAll(employeeDatabase.getAllEmployees());
                 statusLabel.setText("Employee updated successfully.");
                 dialog.close();
-            } catch (NumberFormatException ex) {
+            }
+            catch (NumberFormatException ex) {
                 showAlert("Error", "Invalid input. Please check the fields.");
+            }
+            catch (Exception ex) {
+                showAlert("Error",  ex.getMessage());
             }
         });
 
@@ -467,7 +527,7 @@ public class EmployeeManagementController {
         } catch (NumberFormatException ex) {
             showAlert("Error", "Invalid input. Please enter valid numbers.");
         } catch (Exception ex) {
-            showAlert("Error", "Failed to apply salary raise: " + ex.getMessage());
+            showAlert("Error", ex.getMessage());
         }
     }
 
@@ -500,7 +560,7 @@ public class EmployeeManagementController {
                 showAlert("Average Salary", "No employees found in the specified department.");
             }
         } catch (Exception ex) {
-            showAlert("Error", "Failed to calculate average salary: " + ex.getMessage());
+            showAlert("Error",  ex.getMessage());
         }
     }
 

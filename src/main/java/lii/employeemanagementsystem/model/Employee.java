@@ -1,6 +1,9 @@
 package lii.employeemanagementsystem.model;
 
 import javafx.beans.property.*;
+import lii.employeemanagementsystem.customExceptions.InvalidDepartmentException;
+import lii.employeemanagementsystem.customExceptions.InvalidPerformanceRatingException;
+import lii.employeemanagementsystem.customExceptions.InvalidSalaryException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -80,6 +83,9 @@ public class Employee<T> implements Comparable<Employee<T>> {
     }
 
     public void setName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty.");
+        }
         this.name.set(name);
     }
 
@@ -88,6 +94,10 @@ public class Employee<T> implements Comparable<Employee<T>> {
     }
 
     public void setDepartment(String department) {
+        if (department == null || department.trim().isEmpty()) {
+            throw new InvalidDepartmentException("Department cannot be null or empty.");
+        }
+
         this.department.set(department);
     }
 
@@ -96,14 +106,21 @@ public class Employee<T> implements Comparable<Employee<T>> {
     }
 
     public void setSalary(double salary) {
+        if (salary < 0) {
+            throw new InvalidSalaryException("Salary cannot be negative.");
+        }
         this.salary.set(salary);
     }
+
 
     public double getPerformanceRating() {
         return performanceRating.get();
     }
 
     public void setPerformanceRating(double performanceRating) {
+        if (performanceRating < 0 || performanceRating > 5) {
+            throw new InvalidPerformanceRatingException("Performance rating must be between 0 and 5.");
+        }
         this.performanceRating.set(roundToOneDecimalPlace(performanceRating));
     }
 
