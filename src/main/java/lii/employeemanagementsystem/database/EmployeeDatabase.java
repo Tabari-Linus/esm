@@ -32,9 +32,7 @@ public class EmployeeDatabase<T> {
             employeeMap.put(employee.getEmployeeId(), employee);
         } catch (InvalidSalaryException| InvalidDepartmentException | InvalidYearsOfExperienceException | IllegalArgumentException  e) {
             System.err.println("Error adding employee: " + e.getMessage());
-        }
-        finally {
-            System.out.println("Employee added successfully: " + employee.getName());
+            throw e;
         }
 
 
@@ -116,17 +114,17 @@ public class EmployeeDatabase<T> {
                 .collect(Collectors.toList());
     }
 
-    // Method to calculate the average salary of employees in a specific department
     public double calculateAverageSalaryByDepartment(String department) {
-
-        if (department == null || department.isEmpty()) {
-            throw new InvalidDepartmentException("Department cannot be null or empty.");
+        if (department == null || department.isEmpty() ||
+                employeeMap.values().stream().noneMatch(e -> e.getDepartment().equals(department))) {
+            throw new InvalidDepartmentException("No employee with the selected department " + department);
         }
+
         return employeeMap.values().stream()
-                .filter(employee -> employee.getDepartment().equalsIgnoreCase(department))
+                .filter(e -> e.getDepartment().equals(department))
                 .mapToDouble(Employee::getSalary)
                 .average()
-                .orElse(0.0); // Return 0.0 if no employees are found in the department
+                .orElse(0.0);
     }
 
     // Retrieve all employees

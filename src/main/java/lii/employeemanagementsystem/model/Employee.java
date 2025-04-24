@@ -102,7 +102,7 @@ public class Employee<T> implements Comparable<Employee<T>> {
     }
 
     public double getSalary() {
-        return salary.get();
+        return roundToOneDecimalPlace(salary.get());
     }
 
     public void setSalary(double salary) {
