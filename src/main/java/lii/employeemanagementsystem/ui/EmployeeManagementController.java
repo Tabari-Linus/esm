@@ -283,7 +283,7 @@ public class EmployeeManagementController {
             List<Employee<UUID>> filteredList = new ArrayList<>(employeeDatabase.getAllEmployees());
 
             double minRating = ratingFilterSlider.getValue();
-            if (minRating > 0) {
+            if (minRating >= 0) {
                 filteredList = employeeDatabase.searchByMinimumPerformanceRating(minRating);
             }
 

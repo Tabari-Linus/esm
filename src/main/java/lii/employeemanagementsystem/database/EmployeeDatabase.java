@@ -1,4 +1,8 @@
 package lii.employeemanagementsystem.database;
+import lii.employeemanagementsystem.customExceptions.EmployeeNotFoundException;
+import lii.employeemanagementsystem.customExceptions.InvalidDepartmentException;
+import lii.employeemanagementsystem.customExceptions.InvalidSalaryException;
+import lii.employeemanagementsystem.customExceptions.InvalidYearsOfExperienceException;
 import lii.employeemanagementsystem.model.Employee;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,34 +14,47 @@ public class EmployeeDatabase<T> {
     public void addEmployee(Employee<T> employee) {
         try {
             if (employee.getSalary() < 0) {
-                throw new IllegalArgumentException("Salary cannot be negative.");
+                throw new InvalidSalaryException("Salary cannot be negative.");
             }
             if (employee.getDepartment() == null || employee.getDepartment().isEmpty()) {
-                throw new IllegalArgumentException("Department cannot be null or empty.");
+                throw new InvalidDepartmentException("Employee Department cannot be null or empty.");
             }
-        } catch (IllegalArgumentException e) {
+            if (employee.getName() == null || employee.getName().isEmpty()) {
+                throw new IllegalArgumentException("Employee Name cannot be empty or null.");
+            }
+            if (employee.getYearsOfExperience() < 0) {
+                throw new InvalidYearsOfExperienceException("Years of experience cannot be negative.");
+            }
+            if (employeeMap.containsKey(employee.getEmployeeId())) {
+                throw new IllegalArgumentException("Employee with ID " + employee.getEmployeeId() + " already exists.");
+            }
+
+            employeeMap.put(employee.getEmployeeId(), employee);
+        } catch (InvalidSalaryException| InvalidDepartmentException | InvalidYearsOfExperienceException | IllegalArgumentException  e) {
             System.err.println("Error adding employee: " + e.getMessage());
-            return;
         }
-        if (employeeMap.containsKey(employee.getEmployeeId())) {
-            throw new IllegalArgumentException("Employee with ID " + employee.getEmployeeId() + " already exists.");
-        }
-        employeeMap.put(employee.getEmployeeId(), employee);
+
+
     }
 
     // Remove an employee by ID
     public void removeEmployee(T employeeId) {
-        if (!employeeMap.containsKey(employeeId)) {
-            throw new IllegalArgumentException("Employee with ID " + employeeId + " does not exist.");
+        try {
+            if (!employeeMap.containsKey(employeeId)) {
+                throw new EmployeeNotFoundException("Employee with ID " + employeeId + " does not exist.");
+            }
+            employeeMap.remove(employeeId);
+        } catch (EmployeeNotFoundException ex) {
+            System.err.println("Error removing employee: " + ex.getMessage());
+            throw ex;
         }
-        employeeMap.remove(employeeId);
     }
 
     // Update an employee's details dynamically
     public void updateEmployeeDetails(T employeeId, String field, Object newValue) {
         Employee<T> employee = employeeMap.get(employeeId);
         if (employee == null) {
-            throw new IllegalArgumentException("Employee with ID " + employeeId + " does not exist.");
+            throw new EmployeeNotFoundException("Employee with ID " + employeeId + " does not exist.");
         }
 
         switch (field.toLowerCase()) {
@@ -69,6 +86,17 @@ public class EmployeeDatabase<T> {
 
     // Method to give a salary raise to employees with high performance ratings
     public void giveSalaryRaise(double percentage, double minRating) {
+        try {
+            if (percentage < 0) {
+                throw new IllegalArgumentException("Percentage cannot be negative.");
+            }
+            if (minRating < 0 || minRating > 5) {
+                throw new IllegalArgumentException("Performance rating must be between 0 and 5.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error giving salary raise: " + e.getMessage());
+            throw e;
+        }
         employeeMap.values().stream()
                 .filter(employee -> employee.getPerformanceRating() >= minRating)
                 .forEach(employee -> {
@@ -87,6 +115,10 @@ public class EmployeeDatabase<T> {
 
     // Method to calculate the average salary of employees in a specific department
     public double calculateAverageSalaryByDepartment(String department) {
+
+        if (department == null || department.isEmpty()) {
+            throw new InvalidDepartmentException("Department cannot be null or empty.");
+        }
         return employeeMap.values().stream()
                 .filter(employee -> employee.getDepartment().equalsIgnoreCase(department))
                 .mapToDouble(Employee::getSalary)
@@ -103,6 +135,9 @@ public class EmployeeDatabase<T> {
 
     // Search employees by minimum performance rating
     public List<Employee<T>> searchByMinimumPerformanceRating(double minRating) {
+        if (minRating < 0 || minRating > 5) {
+            throw new IllegalArgumentException("Performance rating must be between 0 and 5.");
+        }
         return employeeMap.values().stream()
                 .filter(employee -> employee.getPerformanceRating() >= minRating)
                 .collect(Collectors.toList());
@@ -119,6 +154,13 @@ public class EmployeeDatabase<T> {
     }
     // Search employees by salary range
     public List<Employee<T>> searchBySalaryRange(double minSalary, double maxSalary) {
+        if (minSalary < 0 || maxSalary < 0) {
+            throw new InvalidSalaryException("Salary cannot be negative.");
+        }
+        if (minSalary > maxSalary) {
+            throw new InvalidSalaryException("Minimum salary cannot be greater than maximum salary.");
+        }
+
         return employeeMap.values().stream()
                 .filter(employee -> employee.getSalary() >= minSalary && employee.getSalary() <= maxSalary)
                 .collect(Collectors.toList());
