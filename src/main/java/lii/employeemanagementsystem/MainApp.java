@@ -15,7 +15,7 @@ import lii.employeemanagementsystem.ui.LoginController;
 
 public class MainApp extends Application {
 
-    private static User authenticatedUser;
+    public static User authenticatedUser;
 
     @Override
     public void start(Stage primaryStage) {
@@ -28,11 +28,11 @@ public class MainApp extends Application {
             Scene scene = new Scene(loader.load());
             LoginController loginController = loader.getController();
 
-            // Set a callback to handle successful login
+
             loginController.setOnLoginSuccess(user -> {
                 authenticatedUser = user;
-                primaryStage.close(); // Close the login screen
-                showMainApplication(); // Show the main application
+                primaryStage.close();
+                showMainApplication();
             });
 
             primaryStage.setScene(scene);
@@ -50,7 +50,7 @@ public class MainApp extends Application {
 
             VBox root = loader.load();
 
-            // Create a header to display the user's profile picture, name, and logout button
+            // Crating a header to display user information
             HBox header = new HBox(10);
             header.setStyle("-fx-padding: 10; -fx-alignment: center-left;");
 
@@ -73,7 +73,7 @@ public class MainApp extends Application {
 
             header.getChildren().addAll(profilePicture, userName, logoutButton);
 
-            // Add the header to the top of the main application layout
+
             root.getChildren().add(0, header);
 
             Scene scene = new Scene(root);

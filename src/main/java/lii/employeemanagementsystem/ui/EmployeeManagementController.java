@@ -1,6 +1,7 @@
 package lii.employeemanagementsystem.ui;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -67,7 +68,10 @@ public class EmployeeManagementController {
     @FXML
     private ComboBox<String> filterActiveComboBox;
 
-
+    @FXML
+    private Label totalEmployeesLabel;
+    @FXML
+    private Label visibleEmployeesLabel;
 
 
     private final EmployeeDatabase<UUID> employeeDatabase = new EmployeeDatabase<>();
@@ -99,6 +103,18 @@ public class EmployeeManagementController {
             }
 
         });
+        loadData();
+        totalEmployeesLabel.setText(String.valueOf(employeeDatabase.getAllEmployees().size()));
+
+        //listener to update employee count on table changes due to filtering or sorting
+        employees.addListener((ListChangeListener<Employee<UUID>>) change -> {
+            visibleEmployeesLabel.setText(String.valueOf(employees.size()));
+            totalEmployeesLabel.setText(String.valueOf(employeeDatabase.getAllEmployees().size()));
+
+        });
+
+
+        visibleEmployeesLabel.setText(String.valueOf(employees.size()));
 
         sortOptions.setItems(FXCollections.observableArrayList(
                 "Sort by Experience",
@@ -163,17 +179,13 @@ public class EmployeeManagementController {
 
 
         ratingFilterSlider.setOnMouseReleased(e -> onApplyFilter());
-        loadSampleData();
+
     }
 
-    private void loadSampleData() {
-        Employee<UUID> emp1 = new Employee<>(UniqueIdGenerator.generateUniqueId(), "Alice Johnson", "IT", 75000, 4.3, 5, true, "file:images/alice.jpg");
-        Employee<UUID> emp2 = new Employee<>(UniqueIdGenerator.generateUniqueId(), "Bob Smith", "Finance", 88000, 3.9, 8, true, "file:images/bob.jpg");
-        Employee<UUID> emp3 = new Employee<>(UniqueIdGenerator.generateUniqueId(), "Clara Lee", "HR", 62000, 4.7, 3, true, "file:images/clara.jpg");
+    private void loadData() {
+        Employee<UUID> emp1 = new Employee<>(UniqueIdGenerator.generateUniqueId(), "Mr Lii", "Admin", 100000, 4.8, 15, true, "file:images/lord.jpg");
 
         employeeDatabase.addEmployee(emp1);
-        employeeDatabase.addEmployee(emp2);
-        employeeDatabase.addEmployee(emp3);
 
         employees.setAll(employeeDatabase.getAllEmployees());
     }
@@ -258,6 +270,8 @@ public class EmployeeManagementController {
             Scene scene = new Scene(container, 400, 300);
             dialog.setScene(scene);
             dialog.show();
+            totalEmployeesLabel.setText(String.valueOf(employeeDatabase.getAllEmployees().size()));
+            visibleEmployeesLabel.setText(String.valueOf(employees.size()));
         } catch (Exception ex) {
             showAlert("Error", "Failed to open Add Employee dialog: " + ex.getMessage());
         }
@@ -302,6 +316,8 @@ public class EmployeeManagementController {
             employeeDatabase.removeEmployee(employee.getEmployeeId());
             employees.setAll(employeeDatabase.getAllEmployees());
             statusLabel.setText("Employee deleted successfully.");
+            totalEmployeesLabel.setText(String.valueOf(employeeDatabase.getAllEmployees().size()));
+            visibleEmployeesLabel.setText(String.valueOf(employees.size()));
         }
     }
 

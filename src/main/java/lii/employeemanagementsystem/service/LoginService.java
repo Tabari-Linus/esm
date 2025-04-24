@@ -10,7 +10,7 @@ public class LoginService {
 
     public LoginService() {
         // Add sample users with profile pictures
-        userDatabase.put("admin", new User("admin", "admin123", "file:D:/space/GA/Amalitech/row/ems/src/main/resources/images/Luffy.png"));
+        userDatabase.put("admin", new User("mrlii", "admin123", "file:D:/space/GA/Amalitech/row/ems/src/main/resources/images/Luffy.png"));
 }
 
     public User authenticate(String username, String password) {

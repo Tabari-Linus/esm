@@ -16,7 +16,7 @@ public class Employee<T> implements Comparable<Employee<T>> {
     private final BooleanProperty active = new SimpleBooleanProperty();
     private final StringProperty profilePicture = new SimpleStringProperty();
 
-    // Constructor
+    // Employee Constructor
     public Employee(T employeeId, String name, String department, double salary, double performanceRating,
                     int yearsOfExperience, boolean active, String profilePicture) {
         this.employeeId.set(employeeId);

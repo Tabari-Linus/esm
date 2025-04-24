@@ -51,7 +51,7 @@
             <Label fx:id="totalEmployeesLabel" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
         </VBox>
         <VBox alignment="CENTER" style="-fx-background-color: #f0f0f0; -fx-padding: 10; -fx-border-color: #ccc; -fx-border-radius: 5; -fx-background-radius: 5;" prefWidth="200">
-            <Label text="Visible Employees" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+            <Label text="Employees on Table" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
             <Label fx:id="visibleEmployeesLabel" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
         </VBox>
     </HBox>
