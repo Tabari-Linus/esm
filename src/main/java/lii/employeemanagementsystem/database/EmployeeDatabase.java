@@ -33,6 +33,9 @@ public class EmployeeDatabase<T> {
         } catch (InvalidSalaryException| InvalidDepartmentException | InvalidYearsOfExperienceException | IllegalArgumentException  e) {
             System.err.println("Error adding employee: " + e.getMessage());
         }
+        finally {
+            System.out.println("Employee added successfully: " + employee.getName());
+        }
 
 
     }
