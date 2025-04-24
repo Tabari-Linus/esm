@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import lii.employeemanagementsystem.customExceptions.InvalidSalaryException;
 import lii.employeemanagementsystem.database.EmployeeDatabase;
 import lii.employeemanagementsystem.model.Employee;
 import lii.employeemanagementsystem.model.EmployeePerformanceComparator;
@@ -235,25 +236,47 @@ public class EmployeeManagementController {
                         return;
                     }
 
-                    Employee<UUID> newEmployee = new Employee<>(
-                            UniqueIdGenerator.generateUniqueId(),
-                            nameField.getText(),
-                            deptComboBox.getValue(),
-                            Double.parseDouble(salaryField.getText()),
-                            ratingSlider.getValue(),
-                            Integer.parseInt(experienceField.getText()),
-                            activeBox.isSelected(),
-                            imagePath[0]
-                    );
-                    employeeDatabase.addEmployee(newEmployee);
-                    employees.setAll(employeeDatabase.getAllEmployees());
-                    statusLabel.setText("Employee added successfully.");
-                    dialog.close();
-                } catch (NumberFormatException ex) {
-                    showAlert("Error", "Invalid input. Please check the fields.");
                 } catch (Exception ex) {
                     showAlert("Error", "Failed to add employee: " + ex.getMessage());
                 }
+
+                try {
+                    if (Double.parseDouble(salaryField.getText()) < 0) {
+                        showAlert("Error", "Salary cannot be negative.");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    showAlert("Error", "Salary must be a valid number.");
+                    return;
+                }
+
+                try {
+                    if (Integer.parseInt(experienceField.getText()) < 0) {
+                        showAlert("Error", "Experience cannot be negative.");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    showAlert("Error", "Experience must be a valid number.");
+                    return;
+                }
+
+
+
+                Employee<UUID> newEmployee = new Employee<>(
+                        UniqueIdGenerator.generateUniqueId(),
+                        nameField.getText(),
+                        deptComboBox.getValue(),
+                        Double.parseDouble(salaryField.getText()),
+                        ratingSlider.getValue(),
+                        Integer.parseInt(experienceField.getText()),
+                        activeBox.isSelected(),
+                        imagePath[0]
+                );
+                employeeDatabase.addEmployee(newEmployee);
+                employees.setAll(employeeDatabase.getAllEmployees());
+                statusLabel.setText("Employee added successfully.");
+                dialog.close();
+
             });
 
             grid.addRow(0, new Label("Name:"), nameField);
@@ -290,17 +313,22 @@ public class EmployeeManagementController {
             String minSalaryText = minSalaryField.getText();
             String maxSalaryText = maxSalaryField.getText();
             if (!minSalaryText.isEmpty() && !maxSalaryText.isEmpty()) {
-                double minSalary = Double.parseDouble(minSalaryText);
-                double maxSalary = Double.parseDouble(maxSalaryText);
-                filteredList = filteredList.stream()
-                        .filter(employee -> employeeDatabase.searchBySalaryRange(minSalary, maxSalary).contains(employee))
-                        .collect(Collectors.toList());
+                try {
+                    double minSalary = Double.parseDouble(minSalaryText);
+                    double maxSalary = Double.parseDouble(maxSalaryText);
+
+                    filteredList = filteredList.stream()
+                            .filter(employee -> employeeDatabase.searchBySalaryRange(minSalary, maxSalary).contains(employee))
+                            .collect(Collectors.toList());
+                } catch (NumberFormatException e) {
+                    showAlert("Error", "Salary input ranges are Invalid. Please enter valid numbers.");
+                } catch (InvalidSalaryException e) {
+                    showAlert("Error", e.getMessage());
+                }
             }
 
             employees.setAll(filteredList);
             statusLabel.setText("Filters applied successfully.");
-        } catch (NumberFormatException ex) {
-            showAlert("Error", "Invalid input. Please check the salary fields.");
         } catch (Exception ex) {
             showAlert("Error", "Failed to apply filters: " + ex.getMessage());
         }
