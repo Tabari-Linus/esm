@@ -147,6 +147,10 @@ public class EmployeeDatabase<T> {
     }
 
     public List<Employee<T>> searchByTerm(String searchTerm) {
+        if (searchTerm == null) {
+            throw new IllegalArgumentException("Search term cannot be null.");
+        }
+
         List<Employee<T>> filtered = new ArrayList<>();
         for (Employee<T> emp : employeeMap.values()) {
             if (emp.getName().toLowerCase().contains(searchTerm.toLowerCase()) || emp.getDepartment().toLowerCase().contains(searchTerm.toLowerCase())) {
