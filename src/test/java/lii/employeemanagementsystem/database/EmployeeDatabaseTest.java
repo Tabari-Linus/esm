@@ -25,7 +25,9 @@ class EmployeeDatabaseTest {
     @Test
     void addEmployeeValidEmployeeTest() {
         employeeDatabase.addEmployee(employee1);
-        assertEquals(1, employeeDatabase.getAllEmployees().size());
+        employeeDatabase.addEmployee(new Employee<>(UUID.randomUUID(), "Ben Johnson", "IT", 1000.0, 5.0, 4, true, null));
+        assertEquals(2, employeeDatabase.getAllEmployees().size());
+
     }
 
     @Test
