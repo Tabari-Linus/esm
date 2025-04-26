@@ -316,28 +316,33 @@ public class EmployeeManagementController {
     private void onApplyFilter() {
         try {
             List<Employee<UUID>> filteredList = new ArrayList<>(employeeDatabase.getAllEmployees());
+            if (filterBySalary.isSelected()){
+                String minSalaryText = minSalaryField.getText();
+                String maxSalaryText = maxSalaryField.getText();
+                if (!minSalaryText.isEmpty() && !maxSalaryText.isEmpty()) {
+                    try {
+                        double minSalary = Double.parseDouble(minSalaryText);
+                        double maxSalary = Double.parseDouble(maxSalaryText);
 
-            double minRating = ratingFilterSlider.getValue();
-            if (minRating >= 0) {
-                filteredList = employeeDatabase.searchByMinimumPerformanceRating(minRating);
-            }
-
-            String minSalaryText = minSalaryField.getText();
-            String maxSalaryText = maxSalaryField.getText();
-            if (!minSalaryText.isEmpty() && !maxSalaryText.isEmpty()) {
-                try {
-                    double minSalary = Double.parseDouble(minSalaryText);
-                    double maxSalary = Double.parseDouble(maxSalaryText);
-
-                    filteredList = filteredList.stream()
-                            .filter(employee -> employeeDatabase.searchBySalaryRange(minSalary, maxSalary).contains(employee))
-                            .collect(Collectors.toList());
-                } catch (NumberFormatException e) {
-                    showAlert("Error", "Salary input ranges are Invalid. Please enter valid numbers.");
-                } catch (InvalidSalaryException e) {
-                    showAlert("Error", e.getMessage());
+                        filteredList = filteredList.stream()
+                                .filter(employee -> employeeDatabase.searchBySalaryRange(minSalary, maxSalary).contains(employee))
+                                .collect(Collectors.toList());
+                    } catch (NumberFormatException e) {
+                        showAlert("Error", "Salary input ranges are Invalid. Please enter valid numbers.");
+                    } catch (InvalidSalaryException e) {
+                        showAlert("Error", e.getMessage());
+                    }
                 }
+
+            }else{
+                double minRating = ratingFilterSlider.getValue();
+                if (minRating >= 0) {
+                    filteredList = employeeDatabase.searchByMinimumPerformanceRating(minRating);
+                }
+
             }
+
+
 
             employees.setAll(filteredList);
             statusLabel.setText("Filters applied successfully.");
